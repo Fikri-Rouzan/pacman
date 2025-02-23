@@ -8,7 +8,7 @@ public class Main {
         int boardWidth = columnCount * tileSize;
         int boardHeight = rowCount * tileSize;
 
-        JFrame frame = new JFrame("Pac Man");
+        JFrame frame = new JFrame("Pac-Man");
         frame.setSize(boardWidth, boardHeight);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
