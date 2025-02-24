@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Random;
@@ -64,7 +65,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    private final int rowCount = 21;
+    private final int rowCount = 22;
     private final int columnCount = 19;
     private final int tileSize = 32;
     private final int boardWidth = columnCount * tileSize;
@@ -81,6 +82,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     private final Image pacmanRightImage;
 
     private final String[] tileMap = {
+            "-------------------",
             "XXXXXXXXXXXXXXXXXXX",
             "X        X        X",
             "X XX XXX X XXX XX X",
@@ -200,15 +202,21 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         }
 
         g.setColor(Color.WHITE);
+
         for (Block food : foods) {
             g.fillRect(food.x, food.y, food.width, food.height);
         }
 
         g.setFont(new Font("Arial", Font.PLAIN, 18));
+
+        int headerHeight = 35;
+        int textY = headerHeight / 2 + 5;
+
         if (gameOver) {
-            g.drawString("Game Over: " + score, tileSize / 2, tileSize / 2);
+            g.drawString("Game Over: " + score, tileSize / 2, textY);
         } else {
-            g.drawString("x" + lives + " Score: " + score, tileSize / 2, tileSize / 2);
+            g.drawString("Lives: " + lives, tileSize / 2, textY);
+            g.drawString("Score: " + score, tileSize / 2 + 150, textY);
         }
     }
 
@@ -233,7 +241,6 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         for (Block ghost : ghosts) {
             if (collision(ghost, pacman)) {
                 lives -= 1;
-
                 if (lives == 0) {
                     gameOver = true;
                     return;
@@ -245,15 +252,77 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                 ghost.updateDirection('U');
             }
 
+            if (ghost.x % tileSize == 0 && ghost.y % tileSize == 0) {
+                ArrayList<Character> availableDirections = new ArrayList<>();
+
+                for (char dir : directions) {
+                    int tempVX = 0, tempVY = 0;
+                    if (dir == 'U') {
+                        tempVY = -tileSize / 4;
+                    } else if (dir == 'D') {
+                        tempVY = tileSize / 4;
+                    } else if (dir == 'L') {
+                        tempVX = -tileSize / 4;
+                    } else if (dir == 'R') {
+                        tempVX = tileSize / 4;
+                    }
+
+                    int newX = ghost.x + tempVX;
+                    int newY = ghost.y + tempVY;
+
+                    Block tempBlock = new Block(ghost.image, newX, newY, ghost.width, ghost.height);
+                    boolean canMove = true;
+
+                    for (Block wall : walls) {
+                        if (collision(tempBlock, wall)) {
+                            canMove = false;
+                            break;
+                        }
+                    }
+
+                    if (canMove) {
+                        availableDirections.add(dir);
+                    }
+                }
+
+                char opposite;
+
+                if (ghost.direction == 'U') {
+                    opposite = 'D';
+                } else if (ghost.direction == 'D') {
+                    opposite = 'U';
+                } else if (ghost.direction == 'L') {
+                    opposite = 'R';
+                } else if (ghost.direction == 'R') {
+                    opposite = 'L';
+                } else {
+                    opposite = ' ';
+                }
+
+                availableDirections.removeIf(dir -> dir == opposite);
+
+                if (!availableDirections.isEmpty() && random.nextInt(10) < 3) {
+                    char newDirection = availableDirections.get(random.nextInt(availableDirections.size()));
+                    ghost.updateDirection(newDirection);
+                }
+            }
+
             ghost.x += ghost.velocityX;
             ghost.y += ghost.velocityY;
 
+            if (ghost.x < 0) {
+                ghost.x = boardWidth - tileSize;
+            } else if (ghost.x >= boardWidth) {
+                ghost.x = 0;
+            }
+
             for (Block wall : walls) {
-                if (collision(ghost, wall) || ghost.x <= 0 || ghost.x + ghost.width >= boardWidth) {
+                if (collision(ghost, wall)) {
                     ghost.x -= ghost.velocityX;
                     ghost.y -= ghost.velocityY;
                     char newDirection = directions[random.nextInt(4)];
                     ghost.updateDirection(newDirection);
+                    break;
                 }
             }
         }

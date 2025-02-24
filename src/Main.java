@@ -1,8 +1,9 @@
-import javax.swing.JFrame;
+import javax.swing.*;
+import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) {
-        int rowCount = 21;
+        int rowCount = 22;
         int columnCount = 19;
         int tileSize = 32;
         int boardWidth = columnCount * tileSize;
@@ -13,6 +14,9 @@ public class Main {
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(Main.class.getResource("/images/icon.png")));
+        frame.setIconImage(icon.getImage());
 
         PacMan pacmanGame = new PacMan();
         frame.add(pacmanGame);
